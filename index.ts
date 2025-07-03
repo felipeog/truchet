@@ -4,68 +4,92 @@ import GUI from "lil-gui";
 // types
 // =============================================================================
 
-enum EArcCorner {
+enum EArcCommand {
   topLeft = "top-left-arc",
   topRight = "top-right-arc",
   bottomLeft = "bottom-left-arc",
   bottomRight = "bottom-right-arc",
 }
 
-type TArcCorner = `${EArcCorner}`;
+type TArcCommand = `${EArcCommand}`;
 
-function isArcCorner(value: any): value is EArcCorner {
-  return Object.values(EArcCorner).includes(value);
+function isArcCommand(value: any): value is EArcCommand {
+  return Object.values(EArcCommand).includes(value);
 }
 
-enum ELineAxis {
+enum ELineCommand {
   vertical = "vertical-line",
   horizontal = "horizontal-line",
+  topLeft = "top-left-line",
+  topRight = "top-right-line",
+  bottomLeft = "bottom-left-line",
+  bottomRight = "bottom-right-line",
 }
 
-type TLineAxis = `${ELineAxis}`;
+type TLineCommand = `${ELineCommand}`;
 
-function isLineAxis(value: any): value is ELineAxis {
-  return Object.values(ELineAxis).includes(value);
+function isLineCommand(value: any): value is ELineCommand {
+  return Object.values(ELineCommand).includes(value);
 }
 
 enum EShapeName {
   xYLines = "x-y-lines",
+
   mainDiagonalArc = "main-diagonal-arc",
   mainDiagonalArcXLine = "main-diagonal-arc-x-line",
   mainDiagonalArcYLine = "main-diagonal-arc-y-line",
   mainDiagonalArcXYLines = "main-diagonal-arc-x-y-lines",
+
   antiDiagonalArc = "anti-diagonal-arc",
   antiDiagonalArcXLine = "anti-diagonal-arc-x-line",
   antiDiagonalArcYLine = "anti-diagonal-arc-y-line",
   antiDiagonalArcXYLines = "anti-diagonal-arc-x-y-lines",
+
+  mainDiagonalLine = "main-diagonal-line",
+  mainDiagonalLineXLine = "main-diagonal-line-x-line",
+  mainDiagonalLineYLine = "main-diagonal-line-y-line",
+  mainDiagonalLineXYLines = "main-diagonal-line-x-y-lines",
+
+  antiDiagonalLine = "anti-diagonal-line",
+  antiDiagonalLineXLine = "anti-diagonal-line-x-line",
+  antiDiagonalLineYLine = "anti-diagonal-line-y-line",
+  antiDiagonalLineXYLines = "anti-diagonal-line-x-y-lines",
+
   arrowTop = "arrow-top",
   arrowRight = "arrow-right",
   arrowBottom = "arrow-bottom",
   arrowLeft = "arrow-left",
+
   star = "star",
   starXLine = "star-x-line",
   starYLine = "star-y-line",
   starXYLines = "star-x-y-lines",
+
   starNoTopRight = "star-no-top-right",
   starNoTopRightXLine = "star-no-top-right-x-line",
   starNoTopRightYLine = "star-no-top-right-y-line",
   starNoTopRightXYLines = "star-no-top-right-x-y-lines",
+
   starNoBottomRight = "star-no-bottom-right",
   starNoBottomRightXLine = "star-no-bottom-right-x-line",
   starNoBottomRightYLine = "star-no-bottom-right-y-line",
   starNoBottomRightXYLines = "star-no-bottom-right-x-y-lines",
+
   starNoBottomLeft = "star-no-bottom-left",
   starNoBottomLeftXLine = "star-no-bottom-left-x-line",
   starNoBottomLeftYLine = "star-no-bottom-left-y-line",
   starNoBottomLeftXYLines = "star-no-bottom-left-x-y-lines",
+
   starNoTopLeft = "star-no-top-left",
   starNoTopLeftXLine = "star-no-top-left-x-line",
   starNoTopLeftYLine = "star-no-top-left-y-line",
   starNoTopLeftXYLines = "star-no-top-left-x-y-lines",
+
   four = "four",
   fourXRotated = "four-x-rotated",
   fourYRotated = "four-y-rotated",
   fourXYRotated = "four-x-y-rotated",
+
   umbrellaTop = "umbrella-top",
   umbrellaRight = "umbrella-right",
   umbrellaBottom = "umbrella-bottom",
@@ -78,7 +102,7 @@ function isShapeName(value: any): value is EShapeName {
   return Object.values(EShapeName).includes(value);
 }
 
-type TCommand = TArcCorner | TLineAxis;
+type TCommand = TArcCommand | TLineCommand;
 
 type TShape = { name: TShapeName; commands: TCommand[] };
 
@@ -106,6 +130,16 @@ const SHAPES: TShape[] = [
   { name: 'anti-diagonal-arc-x-line',    commands: ["top-right-arc", "bottom-left-arc", "horizontal-line"] },
   { name: 'anti-diagonal-arc-y-line',    commands: ["top-right-arc", "bottom-left-arc", "vertical-line"] },
   { name: 'anti-diagonal-arc-x-y-lines', commands: ["top-right-arc", "bottom-left-arc", "vertical-line", "horizontal-line"] },
+  
+  { name: 'main-diagonal-line',           commands: ["top-left-line", "bottom-right-line"] },
+  { name: 'main-diagonal-line-x-line',    commands: ["top-left-line", "bottom-right-line", "horizontal-line"] },
+  { name: 'main-diagonal-line-y-line',    commands: ["top-left-line", "bottom-right-line", "vertical-line"] },
+  { name: 'main-diagonal-line-x-y-lines', commands: ["top-left-line", "bottom-right-line", "vertical-line", "horizontal-line"] },
+
+  { name: 'anti-diagonal-line',           commands: ["top-right-line", "bottom-left-line"] },
+  { name: 'anti-diagonal-line-x-line',    commands: ["top-right-line", "bottom-left-line", "horizontal-line"] },
+  { name: 'anti-diagonal-line-y-line',    commands: ["top-right-line", "bottom-left-line", "vertical-line"] },
+  { name: 'anti-diagonal-line-x-y-lines', commands: ["top-right-line", "bottom-left-line", "vertical-line", "horizontal-line"] },
 
   { name: 'arrow-top',    commands: ["top-left-arc", "top-right-arc", "vertical-line"] },
   { name: 'arrow-right',  commands: ["top-right-arc", "bottom-right-arc", "horizontal-line"] },
@@ -207,22 +241,22 @@ function getShape({
   top: number;
   left: number;
   size: number;
-  command: TArcCorner | TLineAxis;
+  command: TArcCommand | TLineCommand;
 }) {
-  if (isArcCorner(command)) return getArc({ top, left, size, corner: command });
-  if (isLineAxis(command)) return getLine({ top, left, size, axis: command });
+  if (isArcCommand(command)) return getArc({ top, left, size, command });
+  if (isLineCommand(command)) return getLine({ top, left, size, command });
 }
 
 function getLine({
   top,
   left,
   size,
-  axis,
+  command,
 }: {
   top: number;
   left: number;
   size: number;
-  axis: ELineAxis;
+  command: ELineCommand;
 }) {
   let fromX: number | undefined;
   let fromY: number | undefined;
@@ -230,7 +264,27 @@ function getLine({
   let toX: number | undefined;
   let toY: number | undefined;
 
-  if (axis === ELineAxis.vertical) {
+  // from
+  if (command.includes("top")) {
+    fromX = left + size * (1 / 2);
+    fromY = top;
+  }
+  if (command.includes("bottom")) {
+    fromX = left + size * (1 / 2);
+    fromY = top + size;
+  }
+
+  // to
+  if (command.includes("right")) {
+    toX = left + size;
+    toY = top + size * (1 / 2);
+  }
+  if (command.includes("left")) {
+    toX = left;
+    toY = top + size * (1 / 2);
+  }
+
+  if (command === ELineCommand.vertical) {
     fromX = left + size * (1 / 2);
     fromY = top;
 
@@ -238,7 +292,7 @@ function getLine({
     toY = top + size;
   }
 
-  if (axis === ELineAxis.horizontal) {
+  if (command === ELineCommand.horizontal) {
     fromX = left;
     fromY = top + size * (1 / 2);
 
@@ -260,12 +314,12 @@ function getArc({
   top,
   left,
   size,
-  corner,
+  command,
 }: {
   top: number;
   left: number;
   size: number;
-  corner: EArcCorner;
+  command: EArcCommand;
 }) {
   let fromX: number | undefined;
   let fromY: number | undefined;
@@ -276,29 +330,29 @@ function getArc({
   let sweepFlag: number | undefined; // 0 = anticlockwise, 1 = clockwise
 
   // from
-  if (corner.includes("top")) {
+  if (command.includes("top")) {
     fromX = left + size * (1 / 2);
     fromY = top;
   }
-  if (corner.includes("bottom")) {
+  if (command.includes("bottom")) {
     fromX = left + size * (1 / 2);
     fromY = top + size;
   }
 
   // to
-  if (corner.includes("right")) {
+  if (command.includes("right")) {
     toX = left + size;
     toY = top + size * (1 / 2);
   }
-  if (corner.includes("left")) {
+  if (command.includes("left")) {
     toX = left;
     toY = top + size * (1 / 2);
   }
 
   // rotation
-  if (corner === EArcCorner.topRight || corner === EArcCorner.bottomLeft)
+  if (command === EArcCommand.topRight || command === EArcCommand.bottomLeft)
     sweepFlag = 0;
-  if (corner === EArcCorner.topLeft || corner === EArcCorner.bottomRight)
+  if (command === EArcCommand.topLeft || command === EArcCommand.bottomRight)
     sweepFlag = 1;
 
   // prettier-ignore
@@ -339,6 +393,22 @@ const guiConfig: Record<any, any> = {
       switch (shapeName) {
         case EShapeName.mainDiagonalArc:
         case EShapeName.antiDiagonalArc:
+          guiConfig[shapeName] = true;
+          break;
+
+        default:
+          guiConfig[shapeName] = false;
+          break;
+      }
+
+      guiConfig.update();
+    });
+  },
+  labyrinth() {
+    Object.values(EShapeName).forEach((shapeName) => {
+      switch (shapeName) {
+        case EShapeName.mainDiagonalLine:
+        case EShapeName.antiDiagonalLine:
           guiConfig[shapeName] = true;
           break;
 
@@ -445,6 +515,23 @@ const guiConfig: Record<any, any> = {
       guiConfig.update();
     });
   },
+  straightLines() {
+    Object.values(EShapeName).forEach((shapeName) => {
+      switch (shapeName) {
+        case EShapeName.xYLines:
+        case EShapeName.mainDiagonalLine:
+        case EShapeName.antiDiagonalLine:
+          guiConfig[shapeName] = true;
+          break;
+
+        default:
+          guiConfig[shapeName] = false;
+          break;
+      }
+
+      guiConfig.update();
+    });
+  },
   rainLeft() {
     Object.values(EShapeName).forEach((shapeName) => {
       switch (shapeName) {
@@ -517,10 +604,12 @@ const guiConfig: Record<any, any> = {
 
 const presetsFolder = gui.addFolder("Presets");
 presetsFolder.add(guiConfig, "quarterCircles").name("Quarter circles");
+presetsFolder.add(guiConfig, "labyrinth").name("Labyrinth");
 presetsFolder.add(guiConfig, "allArcs").name("All arcs");
 presetsFolder.add(guiConfig, "arcsAndLines").name("Arcs and lines");
 presetsFolder.add(guiConfig, "squaresAndArcs").name("Squares and arcs");
 presetsFolder.add(guiConfig, "circlesAndLines").name("Circles and lines");
+presetsFolder.add(guiConfig, "straightLines").name("Straight lines");
 presetsFolder.add(guiConfig, "rainLeft").name("Rain left");
 presetsFolder.add(guiConfig, "rainRight").name("Rain right");
 
@@ -549,7 +638,7 @@ window.addEventListener("load", () => {
   pathElement.setAttribute("stroke-width", "1");
   pathElement.setAttribute("stroke", "#eee");
 
-  render(state.shapes);
+  guiConfig.quarterCircles();
 });
 
 window.addEventListener(
