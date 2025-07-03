@@ -398,8 +398,10 @@ const guiConfig: Record<any, any> = {
     guiConfig.update();
   },
   randomSelection() {
+    const threshold = Math.random();
+
     Object.values(EShapeName).forEach((shapeName) => {
-      guiConfig[shapeName] = Math.random() >= 0.5;
+      guiConfig[shapeName] = Math.random() >= threshold;
     });
 
     guiConfig.update();
