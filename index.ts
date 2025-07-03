@@ -89,6 +89,10 @@ type TShape = { name: TShapeName; commands: TCommand[] };
 const svgElement = document.querySelector("svg") as SVGSVGElement;
 const pathElement = svgElement.querySelector("path") as SVGPathElement;
 
+// =============================================================================
+// constants
+// =============================================================================
+
 // prettier-ignore
 const SHAPES: TShape[] = [
   { name: 'x-y-lines', commands: ["vertical-line", "horizontal-line"] },
@@ -163,6 +167,7 @@ function render(shapes: TShape[]) {
   svgElement.setAttribute("height", `${height}`);
 
   let d = "";
+
   for (let column = 0; column < columns; column++) {
     for (let row = 0; row < rows; row++) {
       const top = row * size;
@@ -196,17 +201,8 @@ function getShape({
   size: number;
   command: TArcCorner | TLineAxis;
 }) {
-  let d = "";
-
-  if (isArcCorner(command)) {
-    d += getArc({ top, left, size, corner: command });
-  }
-
-  if (isLineAxis(command)) {
-    d += getLine({ top, left, size, axis: command });
-  }
-
-  return d;
+  if (isArcCorner(command)) return getArc({ top, left, size, corner: command });
+  if (isLineAxis(command)) return getLine({ top, left, size, axis: command });
 }
 
 function getLine({
