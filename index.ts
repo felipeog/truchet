@@ -337,6 +337,22 @@ const guiConfig: Record<any, any> = {
   presetOne() {
     Object.values(EShapeName).forEach((shapeName) => {
       switch (shapeName) {
+        case EShapeName.mainDiagonalArc:
+        case EShapeName.antiDiagonalArc:
+          guiConfig[shapeName] = true;
+          break;
+
+        default:
+          guiConfig[shapeName] = false;
+          break;
+      }
+
+      guiConfig.update();
+    });
+  },
+  presetTwo() {
+    Object.values(EShapeName).forEach((shapeName) => {
+      switch (shapeName) {
         case EShapeName.xYLines:
         case EShapeName.mainDiagonalArc:
         case EShapeName.antiDiagonalArc:
@@ -393,6 +409,7 @@ const guiConfig: Record<any, any> = {
 
 const presetsFolder = gui.addFolder("Presets");
 presetsFolder.add(guiConfig, "presetOne").name("Preset one");
+presetsFolder.add(guiConfig, "presetTwo").name("Preset two");
 
 const selectionFolder = gui.addFolder("Selection");
 selectionFolder.add(guiConfig, "selectAll").name("Select All");
