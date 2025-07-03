@@ -153,7 +153,7 @@ const SHAPES: TShape[] = [
 // =============================================================================
 
 const state = {
-  shapes: SHAPES,
+  shapes: Array.from(SHAPES),
 };
 
 // =============================================================================
@@ -334,7 +334,7 @@ function debounce<T extends (...args: any[]) => any>(
 const gui = new GUI({ title: "Truchet " });
 
 const guiConfig: Record<any, any> = {
-  presetOne() {
+  quarterCircles() {
     Object.values(EShapeName).forEach((shapeName) => {
       switch (shapeName) {
         case EShapeName.mainDiagonalArc:
@@ -350,7 +350,28 @@ const guiConfig: Record<any, any> = {
       guiConfig.update();
     });
   },
-  presetTwo() {
+  allArcs() {
+    Object.values(EShapeName).forEach((shapeName) => {
+      switch (shapeName) {
+        case EShapeName.mainDiagonalArc:
+        case EShapeName.antiDiagonalArc:
+        case EShapeName.star:
+        case EShapeName.starNoTopRight:
+        case EShapeName.starNoBottomRight:
+        case EShapeName.starNoBottomLeft:
+        case EShapeName.starNoTopLeft:
+          guiConfig[shapeName] = true;
+          break;
+
+        default:
+          guiConfig[shapeName] = false;
+          break;
+      }
+
+      guiConfig.update();
+    });
+  },
+  arcsAndLines() {
     Object.values(EShapeName).forEach((shapeName) => {
       switch (shapeName) {
         case EShapeName.xYLines:
@@ -365,6 +386,84 @@ const guiConfig: Record<any, any> = {
         case EShapeName.starNoBottomRight:
         case EShapeName.starNoBottomLeft:
         case EShapeName.starNoTopLeft:
+          guiConfig[shapeName] = true;
+          break;
+
+        default:
+          guiConfig[shapeName] = false;
+          break;
+      }
+
+      guiConfig.update();
+    });
+  },
+  squaresAndArcs() {
+    Object.values(EShapeName).forEach((shapeName) => {
+      switch (shapeName) {
+        case EShapeName.xYLines:
+        case EShapeName.mainDiagonalArcXYLines:
+        case EShapeName.antiDiagonalArcXYLines:
+        case EShapeName.starXYLines:
+        case EShapeName.starNoTopRightXYLines:
+        case EShapeName.starNoBottomRightXYLines:
+        case EShapeName.starNoBottomLeftXYLines:
+        case EShapeName.starNoTopLeftXYLines:
+        case EShapeName.four:
+        case EShapeName.fourXRotated:
+        case EShapeName.fourYRotated:
+        case EShapeName.fourXYRotated:
+        case EShapeName.umbrellaTop:
+        case EShapeName.umbrellaRight:
+        case EShapeName.umbrellaBottom:
+        case EShapeName.umbrellaLeft:
+          guiConfig[shapeName] = true;
+          break;
+
+        default:
+          guiConfig[shapeName] = false;
+          break;
+      }
+
+      guiConfig.update();
+    });
+  },
+  circlesAndLines() {
+    Object.values(EShapeName).forEach((shapeName) => {
+      switch (shapeName) {
+        case EShapeName.star:
+        case EShapeName.starXLine:
+        case EShapeName.starYLine:
+        case EShapeName.starXYLines:
+          guiConfig[shapeName] = true;
+          break;
+
+        default:
+          guiConfig[shapeName] = false;
+          break;
+      }
+
+      guiConfig.update();
+    });
+  },
+  rainLeft() {
+    Object.values(EShapeName).forEach((shapeName) => {
+      switch (shapeName) {
+        case EShapeName.starNoBottomLeftYLine:
+          guiConfig[shapeName] = true;
+          break;
+
+        default:
+          guiConfig[shapeName] = false;
+          break;
+      }
+
+      guiConfig.update();
+    });
+  },
+  rainRight() {
+    Object.values(EShapeName).forEach((shapeName) => {
+      switch (shapeName) {
+        case EShapeName.starNoBottomRightYLine:
           guiConfig[shapeName] = true;
           break;
 
@@ -417,8 +516,13 @@ const guiConfig: Record<any, any> = {
 };
 
 const presetsFolder = gui.addFolder("Presets");
-presetsFolder.add(guiConfig, "presetOne").name("Preset one");
-presetsFolder.add(guiConfig, "presetTwo").name("Preset two");
+presetsFolder.add(guiConfig, "quarterCircles").name("Quarter circles");
+presetsFolder.add(guiConfig, "allArcs").name("All arcs");
+presetsFolder.add(guiConfig, "arcsAndLines").name("Arcs and lines");
+presetsFolder.add(guiConfig, "squaresAndArcs").name("Squares and arcs");
+presetsFolder.add(guiConfig, "circlesAndLines").name("Circles and lines");
+presetsFolder.add(guiConfig, "rainLeft").name("Rain left");
+presetsFolder.add(guiConfig, "rainRight").name("Rain right");
 
 const selectionFolder = gui.addFolder("Selection");
 selectionFolder.add(guiConfig, "selectAll").name("Select All");
