@@ -1,0 +1,19 @@
+{
+  "name": "truchet",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "bun build ./index.html --minify --outdir dist",
+    "dev": "bun run ./index.html"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "lil-gui": "^0.20.0"
+  }
+}
