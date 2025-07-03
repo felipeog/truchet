@@ -397,6 +397,13 @@ const guiConfig: Record<any, any> = {
 
     guiConfig.update();
   },
+  randomSelection() {
+    Object.values(EShapeName).forEach((shapeName) => {
+      guiConfig[shapeName] = Math.random() >= 0.5;
+    });
+
+    guiConfig.update();
+  },
   update() {
     state.shapes = Object.entries(guiConfig)
       .filter(([shapeName, isChecked]) => isShapeName(shapeName) && isChecked)
@@ -415,6 +422,7 @@ const selectionFolder = gui.addFolder("Selection");
 selectionFolder.add(guiConfig, "selectAll").name("Select All");
 selectionFolder.add(guiConfig, "selectNone").name("Select None");
 selectionFolder.add(guiConfig, "toggleSelection").name("Toggle Selection");
+selectionFolder.add(guiConfig, "randomSelection").name("Random Selection");
 
 const shapesFolder = gui.addFolder("Shapes");
 Object.values(EShapeName).forEach((shapeName) => {
