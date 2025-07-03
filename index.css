@@ -5,3 +5,13 @@ body {
   overflow: hidden;
   background-color: black;
 }
+
+.lil-gui {
+  --font-size: 12px;
+  --input-font-size: 12px;
+  --padding: 2px;
+  --spacing: 2px;
+  --widget-height: 18px;
+  --name-width: 90%;
+  --folder-indent: 6px;
+}

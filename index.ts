@@ -89,18 +89,6 @@ type TShape = { name: TShapeName; commands: TCommand[] };
 const svgElement = document.querySelector("svg") as SVGSVGElement;
 const pathElement = svgElement.querySelector("path") as SVGPathElement;
 
-// =============================================================================
-// constants
-// =============================================================================
-
-const WIDTH = window.innerWidth;
-const HEIGHT = window.innerHeight;
-
-const SIZE = 50;
-
-const COLUMNS = Math.ceil(WIDTH / SIZE);
-const ROWS = Math.ceil(HEIGHT / SIZE);
-
 // prettier-ignore
 const SHAPES: TShape[] = [
   { name: 'x-y-lines', commands: ["vertical-line", "horizontal-line"] },
@@ -161,22 +149,31 @@ const SHAPES: TShape[] = [
 // =============================================================================
 
 function render(shapes: TShape[]) {
-  svgElement.setAttribute("viewBox", `0 0 ${WIDTH} ${HEIGHT}`);
-  svgElement.setAttribute("width", `${WIDTH}`);
-  svgElement.setAttribute("height", `${HEIGHT}`);
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  // TODO: make this configurable
+  const size = 50;
+
+  const columns = Math.ceil(width / size);
+  const rows = Math.ceil(height / size);
+
+  svgElement.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svgElement.setAttribute("width", `${width}`);
+  svgElement.setAttribute("height", `${height}`);
 
   let d = "";
-  for (let column = 0; column < COLUMNS; column++) {
-    for (let row = 0; row < ROWS; row++) {
-      const top = row * SIZE;
-      const left = column * SIZE;
+  for (let column = 0; column < columns; column++) {
+    for (let row = 0; row < rows; row++) {
+      const top = row * size;
+      const left = column * size;
 
       const shape = getRandom(shapes);
 
       if (!shape) continue;
 
       shape.commands.forEach((command) => {
-        d += getShape({ top, left, command });
+        d += getShape({ top, left, size, command });
       });
     }
   }
@@ -191,20 +188,22 @@ function getRandom<T>(array: T[]) {
 function getShape({
   top,
   left,
+  size,
   command,
 }: {
   top: number;
   left: number;
+  size: number;
   command: TArcCorner | TLineAxis;
 }) {
   let d = "";
 
   if (isArcCorner(command)) {
-    d += getArc({ top, left, corner: command });
+    d += getArc({ top, left, size, corner: command });
   }
 
   if (isLineAxis(command)) {
-    d += getLine({ top, left, axis: command });
+    d += getLine({ top, left, size, axis: command });
   }
 
   return d;
@@ -213,10 +212,12 @@ function getShape({
 function getLine({
   top,
   left,
+  size,
   axis,
 }: {
   top: number;
   left: number;
+  size: number;
   axis: ELineAxis;
 }) {
   let fromX: number | undefined;
@@ -226,19 +227,19 @@ function getLine({
   let toY: number | undefined;
 
   if (axis === ELineAxis.vertical) {
-    fromX = left + SIZE * (1 / 2);
+    fromX = left + size * (1 / 2);
     fromY = top;
 
-    toX = left + SIZE * (1 / 2);
-    toY = top + SIZE;
+    toX = left + size * (1 / 2);
+    toY = top + size;
   }
 
   if (axis === ELineAxis.horizontal) {
     fromX = left;
-    fromY = top + SIZE * (1 / 2);
+    fromY = top + size * (1 / 2);
 
-    toX = left + SIZE;
-    toY = top + +SIZE * (1 / 2);
+    toX = left + size;
+    toY = top + +size * (1 / 2);
   }
 
   // prettier-ignore
@@ -254,10 +255,12 @@ function getLine({
 function getArc({
   top,
   left,
+  size,
   corner,
 }: {
   top: number;
   left: number;
+  size: number;
   corner: EArcCorner;
 }) {
   let fromX: number | undefined;
@@ -270,22 +273,22 @@ function getArc({
 
   // from
   if (corner.includes("top")) {
-    fromX = left + SIZE * (1 / 2);
+    fromX = left + size * (1 / 2);
     fromY = top;
   }
   if (corner.includes("bottom")) {
-    fromX = left + SIZE * (1 / 2);
-    fromY = top + SIZE;
+    fromX = left + size * (1 / 2);
+    fromY = top + size;
   }
 
   // to
   if (corner.includes("right")) {
-    toX = left + SIZE;
-    toY = top + SIZE * (1 / 2);
+    toX = left + size;
+    toY = top + size * (1 / 2);
   }
   if (corner.includes("left")) {
     toX = left;
-    toY = top + SIZE * (1 / 2);
+    toY = top + size * (1 / 2);
   }
 
   // rotation
@@ -300,7 +303,7 @@ function getArc({
     `${fromX}, ${fromY} ` +
 
     `A ` +
-    `${SIZE / 2}, ${SIZE / 2} ` +
+    `${size / 2}, ${size / 2} ` +
     `0 ` +
     `0 ` +
     `${sweepFlag} ` +
@@ -312,9 +315,56 @@ function getArc({
 // configuration interface
 // =============================================================================
 
-const gui = new GUI();
+const gui = new GUI({ title: "Truchet " });
 
 const guiConfig: Record<any, any> = {
+  presetOne() {
+    Object.values(EShapeName).forEach((shapeName) => {
+      switch (shapeName) {
+        case EShapeName.xYLines:
+        case EShapeName.mainDiagonalArc:
+        case EShapeName.antiDiagonalArc:
+        case EShapeName.arrowTop:
+        case EShapeName.arrowRight:
+        case EShapeName.arrowBottom:
+        case EShapeName.arrowLeft:
+        case EShapeName.star:
+        case EShapeName.starNoTopRight:
+        case EShapeName.starNoBottomRight:
+        case EShapeName.starNoBottomLeft:
+        case EShapeName.starNoTopLeft:
+          guiConfig[shapeName] = true;
+          break;
+
+        default:
+          guiConfig[shapeName] = false;
+          break;
+      }
+
+      guiConfig.update();
+    });
+  },
+  selectAll() {
+    Object.values(EShapeName).forEach((shapeName) => {
+      guiConfig[shapeName] = true;
+    });
+
+    guiConfig.update();
+  },
+  selectNone() {
+    Object.values(EShapeName).forEach((shapeName) => {
+      guiConfig[shapeName] = false;
+    });
+
+    guiConfig.update();
+  },
+  toggleSelection() {
+    Object.values(EShapeName).forEach((shapeName) => {
+      guiConfig[shapeName] = !guiConfig[shapeName];
+    });
+
+    guiConfig.update();
+  },
   update() {
     const shapes = Object.entries(guiConfig)
       .filter(([shapeName, isChecked]) => isShapeName(shapeName) && isChecked)
@@ -325,12 +375,23 @@ const guiConfig: Record<any, any> = {
   },
 };
 
+const presetsFolder = gui.addFolder("Presets");
+presetsFolder.add(guiConfig, "presetOne").name("Preset one");
+
+const selectionFolder = gui.addFolder("Selection");
+selectionFolder.add(guiConfig, "selectAll").name("Select All");
+selectionFolder.add(guiConfig, "selectNone").name("Select None");
+selectionFolder.add(guiConfig, "toggleSelection").name("Toggle Selection");
+
+const shapesFolder = gui.addFolder("Shapes");
 Object.values(EShapeName).forEach((shapeName) => {
   guiConfig[shapeName] = true;
-  gui.add(guiConfig, shapeName).name(shapeName);
+  shapesFolder
+    .add(guiConfig, shapeName)
+    .name(shapeName)
+    .listen()
+    .onChange(guiConfig.update);
 });
-
-gui.add(guiConfig, "update").name("Update");
 
 // =============================================================================
 // events
