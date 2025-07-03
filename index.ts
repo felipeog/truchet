@@ -1,140 +1,210 @@
-// import GUI from "lil-gui";
+import GUI from "lil-gui";
 
-type TArcCorner =
-  | "top-left-arc"
-  | "top-right-arc"
-  | "bottom-left-arc"
-  | "bottom-right-arc";
+// =============================================================================
+// types
+// =============================================================================
 
-type TLineAxis = "vertical-line" | "horizontal-line";
+enum EArcCorner {
+  topLeft = "top-left-arc",
+  topRight = "top-right-arc",
+  bottomLeft = "bottom-left-arc",
+  bottomRight = "bottom-right-arc",
+}
+
+type TArcCorner = `${EArcCorner}`;
+
+function isArcCorner(value: any): value is EArcCorner {
+  return Object.values(EArcCorner).includes(value);
+}
+
+enum ELineAxis {
+  vertical = "vertical-line",
+  horizontal = "horizontal-line",
+}
+
+type TLineAxis = `${ELineAxis}`;
+
+function isLineAxis(value: any): value is ELineAxis {
+  return Object.values(ELineAxis).includes(value);
+}
+
+enum EShapeName {
+  xYLines = "x-y-lines",
+  mainDiagonalArc = "main-diagonal-arc",
+  mainDiagonalArcXLine = "main-diagonal-arc-x-line",
+  mainDiagonalArcYLine = "main-diagonal-arc-y-line",
+  mainDiagonalArcXYLines = "main-diagonal-arc-x-y-lines",
+  antiDiagonalArc = "anti-diagonal-arc",
+  antiDiagonalArcXLine = "anti-diagonal-arc-x-line",
+  antiDiagonalArcYLine = "anti-diagonal-arc-y-line",
+  antiDiagonalArcXYLines = "anti-diagonal-arc-x-y-lines",
+  arrowTop = "arrow-top",
+  arrowRight = "arrow-right",
+  arrowBottom = "arrow-bottom",
+  arrowLeft = "arrow-left",
+  star = "star",
+  starXLine = "star-x-line",
+  starYLine = "star-y-line",
+  starXYLines = "star-x-y-lines",
+  starNoTopRight = "star-no-top-right",
+  starNoTopRightXLine = "star-no-top-right-x-line",
+  starNoTopRightYLine = "star-no-top-right-y-line",
+  starNoTopRightXYLines = "star-no-top-right-x-y-lines",
+  starNoBottomRight = "star-no-bottom-right",
+  starNoBottomRightXLine = "star-no-bottom-right-x-line",
+  starNoBottomRightYLine = "star-no-bottom-right-y-line",
+  starNoBottomRightXYLines = "star-no-bottom-right-x-y-lines",
+  starNoBottomLeft = "star-no-bottom-left",
+  starNoBottomLeftXLine = "star-no-bottom-left-x-line",
+  starNoBottomLeftYLine = "star-no-bottom-left-y-line",
+  starNoBottomLeftXYLines = "star-no-bottom-left-x-y-lines",
+  starNoTopLeft = "star-no-top-left",
+  starNoTopLeftXLine = "star-no-top-left-x-line",
+  starNoTopLeftYLine = "star-no-top-left-y-line",
+  starNoTopLeftXYLines = "star-no-top-left-x-y-lines",
+  four = "four",
+  fourXRotated = "four-x-rotated",
+  fourYRotated = "four-y-rotated",
+  fourXYRotated = "four-x-y-rotated",
+  umbrellaTop = "umbrella-top",
+  umbrellaRight = "umbrella-right",
+  umbrellaBottom = "umbrella-bottom",
+  umbrellaLeft = "umbrella-left",
+}
+
+type TShapeName = `${EShapeName}`;
+
+function isShapeName(value: any): value is EShapeName {
+  return Object.values(EShapeName).includes(value);
+}
+
+type TCommand = TArcCorner | TLineAxis;
+
+type TShape = { name: TShapeName; commands: TCommand[] };
+
+// =============================================================================
+// elements
+// =============================================================================
 
 const svgElement = document.querySelector("svg") as SVGSVGElement;
 const pathElement = svgElement.querySelector("path") as SVGPathElement;
+
+// =============================================================================
+// constants
+// =============================================================================
 
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
 
 const SIZE = 50;
-const RADIUS = SIZE / 2;
 
 const COLUMNS = Math.ceil(WIDTH / SIZE);
 const ROWS = Math.ceil(HEIGHT / SIZE);
 
 // prettier-ignore
-const COMBINATIONS = [
-  ["vertical-line", "horizontal-line"], // x-y-lines
+const SHAPES: TShape[] = [
+  { name: 'x-y-lines', commands: ["vertical-line", "horizontal-line"] },
 
-  ["top-left-arc", "bottom-right-arc"],                                     // main-diagonal-arc
-  ["top-left-arc", "bottom-right-arc", "horizontal-line"],                  // main-diagonal-arc-x-line
-  ["top-left-arc", "bottom-right-arc", "vertical-line"],                    // main-diagonal-arc-y-line
-  ["top-left-arc", "bottom-right-arc", "vertical-line", "horizontal-line"], // main-diagonal-arc-x-y-lines
+  { name: 'main-diagonal-arc',           commands: ["top-left-arc", "bottom-right-arc"] },
+  { name: 'main-diagonal-arc-x-line',    commands: ["top-left-arc", "bottom-right-arc", "horizontal-line"] },
+  { name: 'main-diagonal-arc-y-line',    commands: ["top-left-arc", "bottom-right-arc", "vertical-line"] },
+  { name: 'main-diagonal-arc-x-y-lines', commands: ["top-left-arc", "bottom-right-arc", "vertical-line", "horizontal-line"] },
 
-  ["top-right-arc", "bottom-left-arc"],                                     // anti-diagonal-arc
-  ["top-right-arc", "bottom-left-arc", "horizontal-line"],                  // anti-diagonal-arc-x-line
-  ["top-right-arc", "bottom-left-arc", "vertical-line"],                    // anti-diagonal-arc-y-line
-  ["top-right-arc", "bottom-left-arc", "vertical-line", "horizontal-line"], // anti-diagonal-arc-x-y-lines
+  { name: 'anti-diagonal-arc',           commands: ["top-right-arc", "bottom-left-arc"] },
+  { name: 'anti-diagonal-arc-x-line',    commands: ["top-right-arc", "bottom-left-arc", "horizontal-line"] },
+  { name: 'anti-diagonal-arc-y-line',    commands: ["top-right-arc", "bottom-left-arc", "vertical-line"] },
+  { name: 'anti-diagonal-arc-x-y-lines', commands: ["top-right-arc", "bottom-left-arc", "vertical-line", "horizontal-line"] },
 
-  ["top-left-arc", "top-right-arc", "vertical-line"],       // arrow-top
-  ["top-right-arc", "bottom-right-arc", "horizontal-line"], // arrow-right
-  ["bottom-left-arc", "bottom-right-arc", "vertical-line"], // arrow-bottom
-  ["top-left-arc", "bottom-left-arc", "horizontal-line"],   // arrow-left
+  { name: 'arrow-top',    commands: ["top-left-arc", "top-right-arc", "vertical-line"] },
+  { name: 'arrow-right',  commands: ["top-right-arc", "bottom-right-arc", "horizontal-line"] },
+  { name: 'arrow-bottom', commands: ["bottom-left-arc", "bottom-right-arc", "vertical-line"] },
+  { name: 'arrow-left',   commands: ["top-left-arc", "bottom-left-arc", "horizontal-line"] },
 
-  ["top-left-arc", "top-right-arc", "bottom-left-arc", "bottom-right-arc"],                                     // star
-  ["top-left-arc", "top-right-arc", "bottom-left-arc", "bottom-right-arc", "horizontal-line"],                  // star-x-line
-  ["top-left-arc", "top-right-arc", "bottom-left-arc", "bottom-right-arc", "vertical-line"],                    // star-y-line
-  ["top-left-arc", "top-right-arc", "bottom-left-arc", "bottom-right-arc", "vertical-line", "horizontal-line"], // star-x-y-lines
+  { name: 'star',           commands: ["top-left-arc", "top-right-arc", "bottom-left-arc", "bottom-right-arc"] },
+  { name: 'star-x-line',    commands: ["top-left-arc", "top-right-arc", "bottom-left-arc", "bottom-right-arc", "horizontal-line"] },
+  { name: 'star-y-line',    commands: ["top-left-arc", "top-right-arc", "bottom-left-arc", "bottom-right-arc", "vertical-line"] },
+  { name: 'star-x-y-lines', commands: ["top-left-arc", "top-right-arc", "bottom-left-arc", "bottom-right-arc", "vertical-line", "horizontal-line"] },
 
-  ["top-left-arc", "bottom-left-arc", "bottom-right-arc"],                                     // star-no-top-right
-  ["top-left-arc", "bottom-left-arc", "bottom-right-arc", "horizontal-line"],                  // star-no-top-right-x-line
-  ["top-left-arc", "bottom-left-arc", "bottom-right-arc", "vertical-line"],                    // star-no-top-right-y-line
-  ["top-left-arc", "bottom-left-arc", "bottom-right-arc", "vertical-line", "horizontal-line"], // star-no-top-right-x-y-lines
+  { name: 'star-no-top-right',           commands: ["top-left-arc", "bottom-left-arc", "bottom-right-arc"] },
+  { name: 'star-no-top-right-x-line',    commands: ["top-left-arc", "bottom-left-arc", "bottom-right-arc", "horizontal-line"] },
+  { name: 'star-no-top-right-y-line',    commands: ["top-left-arc", "bottom-left-arc", "bottom-right-arc", "vertical-line"] },
+  { name: 'star-no-top-right-x-y-lines', commands: ["top-left-arc", "bottom-left-arc", "bottom-right-arc", "vertical-line", "horizontal-line"] },
 
-  ["top-left-arc", "top-right-arc", "bottom-left-arc"],                                     // star-no-bottom-right
-  ["top-left-arc", "top-right-arc", "bottom-left-arc", "horizontal-line"],                  // star-no-bottom-right-x-line
-  ["top-left-arc", "top-right-arc", "bottom-left-arc", "vertical-line"],                    // star-no-bottom-right-y-line
-  ["top-left-arc", "top-right-arc", "bottom-left-arc", "vertical-line", "horizontal-line"], // star-no-bottom-right-x-y-lines
+  { name: 'star-no-bottom-right',           commands: ["top-left-arc", "top-right-arc", "bottom-left-arc"] },
+  { name: 'star-no-bottom-right-x-line',    commands: ["top-left-arc", "top-right-arc", "bottom-left-arc", "horizontal-line"] },
+  { name: 'star-no-bottom-right-y-line',    commands: ["top-left-arc", "top-right-arc", "bottom-left-arc", "vertical-line"] },
+  { name: 'star-no-bottom-right-x-y-lines', commands: ["top-left-arc", "top-right-arc", "bottom-left-arc", "vertical-line", "horizontal-line"] },
 
-  ["top-left-arc", "top-right-arc", "bottom-right-arc"],                                     // star-no-bottom-left
-  ["top-left-arc", "top-right-arc", "bottom-right-arc", "horizontal-line"],                  // star-no-bottom-left-x-line
-  ["top-left-arc", "top-right-arc", "bottom-right-arc", "vertical-line"],                    // star-no-bottom-left-y-line
-  ["top-left-arc", "top-right-arc", "bottom-right-arc", "vertical-line", "horizontal-line"], // star-no-bottom-left-x-y-lines
+  { name: 'star-no-bottom-left',           commands: ["top-left-arc", "top-right-arc", "bottom-right-arc"] },
+  { name: 'star-no-bottom-left-x-line',    commands: ["top-left-arc", "top-right-arc", "bottom-right-arc", "horizontal-line"] },
+  { name: 'star-no-bottom-left-y-line',    commands: ["top-left-arc", "top-right-arc", "bottom-right-arc", "vertical-line"] },
+  { name: 'star-no-bottom-left-x-y-lines', commands: ["top-left-arc", "top-right-arc", "bottom-right-arc", "vertical-line", "horizontal-line"] },
 
-  ["top-right-arc", "bottom-left-arc", "bottom-right-arc"],                                     // star-no-top-left
-  ["top-right-arc", "bottom-left-arc", "bottom-right-arc", "horizontal-line"],                  // star-no-top-left-x-line
-  ["top-right-arc", "bottom-left-arc", "bottom-right-arc", "vertical-line"],                    // star-no-top-left-y-line
-  ["top-right-arc", "bottom-left-arc", "bottom-right-arc", "vertical-line", "horizontal-line"], // star-no-top-left-x-y-lines
+  { name: 'star-no-top-left',           commands: ["top-right-arc", "bottom-left-arc", "bottom-right-arc"] },
+  { name: 'star-no-top-left-x-line',    commands: ["top-right-arc", "bottom-left-arc", "bottom-right-arc", "horizontal-line"] },
+  { name: 'star-no-top-left-y-line',    commands: ["top-right-arc", "bottom-left-arc", "bottom-right-arc", "vertical-line"] },
+  { name: 'star-no-top-left-x-y-lines', commands: ["top-right-arc", "bottom-left-arc", "bottom-right-arc", "vertical-line", "horizontal-line"] },
 
-  ["top-left-arc", "vertical-line", "horizontal-line"],     // four
-  ["bottom-left-arc", "vertical-line", "horizontal-line"],  // four-x-rotated
-  ["top-right-arc", "vertical-line", "horizontal-line"],    // four-y-rotated
-  ["bottom-right-arc", "vertical-line", "horizontal-line"], // four-x-y-rotated
+  { name: 'four',             commands: ["top-left-arc", "vertical-line", "horizontal-line"] },
+  { name: 'four-x-rotated',   commands: ["bottom-left-arc", "vertical-line", "horizontal-line"] },
+  { name: 'four-y-rotated',   commands: ["top-right-arc", "vertical-line", "horizontal-line"] },
+  { name: 'four-x-y-rotated', commands: ["bottom-right-arc", "vertical-line", "horizontal-line"] },
 
-  ["top-left-arc", "top-right-arc", "vertical-line", "horizontal-line"],       // umbrella-top
-  ["top-right-arc", "bottom-right-arc", "vertical-line", "horizontal-line"],   // umbrella-right
-  ["bottom-left-arc", "bottom-right-arc", "vertical-line", "horizontal-line"], // umbrella-bottom
-  ["top-left-arc", "bottom-left-arc", "vertical-line", "horizontal-line"],     // umbrella-left
+  { name: 'umbrella-top',    commands: ["top-left-arc", "top-right-arc", "vertical-line", "horizontal-line"] },
+  { name: 'umbrella-right',  commands: ["top-right-arc", "bottom-right-arc", "vertical-line", "horizontal-line"] },
+  { name: 'umbrella-bottom', commands: ["bottom-left-arc", "bottom-right-arc", "vertical-line", "horizontal-line"] },
+  { name: 'umbrella-left',   commands: ["top-left-arc", "bottom-left-arc", "vertical-line", "horizontal-line"] },
 ];
 
-svgElement.setAttribute("viewBox", `0 0 ${WIDTH} ${HEIGHT}`);
-svgElement.setAttribute("width", `${WIDTH}`);
-svgElement.setAttribute("height", `${HEIGHT}`);
+// =============================================================================
+// functions
+// =============================================================================
 
-let d = "";
-for (let column = 0; column < COLUMNS; column++) {
-  for (let row = 0; row < ROWS; row++) {
-    const top = row * SIZE;
-    const left = column * SIZE;
+function render(shapes: TShape[]) {
+  svgElement.setAttribute("viewBox", `0 0 ${WIDTH} ${HEIGHT}`);
+  svgElement.setAttribute("width", `${WIDTH}`);
+  svgElement.setAttribute("height", `${HEIGHT}`);
 
-    const combination = getRandom(COMBINATIONS)!;
+  let d = "";
+  for (let column = 0; column < COLUMNS; column++) {
+    for (let row = 0; row < ROWS; row++) {
+      const top = row * SIZE;
+      const left = column * SIZE;
 
-    combination.forEach((tile) => {
-      d += getTile({ top, left, tile });
-    });
+      const shape = getRandom(shapes);
+
+      if (!shape) continue;
+
+      shape.commands.forEach((command) => {
+        d += getShape({ top, left, command });
+      });
+    }
   }
-}
 
-pathElement.setAttribute("fill", "none");
-pathElement.setAttribute("stroke-width", "1");
-pathElement.setAttribute("stroke", "#eee");
-pathElement.setAttribute("d", d);
+  pathElement.setAttribute("d", d);
+}
 
 function getRandom<T>(array: T[]) {
   return array[Math.floor(Math.random() * array.length)];
 }
 
-function getTile({
+function getShape({
   top,
   left,
-  tile,
+  command,
 }: {
   top: number;
   left: number;
-  tile: string;
+  command: TArcCorner | TLineAxis;
 }) {
   let d = "";
 
-  if (tile === "top-left-arc") {
-    d += getArc({ top, left, corner: "top-left" });
+  if (isArcCorner(command)) {
+    d += getArc({ top, left, corner: command });
   }
 
-  if (tile === "top-right-arc") {
-    d += getArc({ top, left, corner: "top-right" });
-  }
-
-  if (tile === "bottom-left-arc") {
-    d += getArc({ top, left, corner: "bottom-left" });
-  }
-
-  if (tile === "bottom-right-arc") {
-    d += getArc({ top, left, corner: "bottom-right" });
-  }
-
-  if (tile === "vertical-line") {
-    d += getLine({ top, left, axis: "vertical" });
-  }
-
-  if (tile === "horizontal-line") {
-    d += getLine({ top, left, axis: "horizontal" });
+  if (isLineAxis(command)) {
+    d += getLine({ top, left, axis: command });
   }
 
   return d;
@@ -147,7 +217,7 @@ function getLine({
 }: {
   top: number;
   left: number;
-  axis: string;
+  axis: ELineAxis;
 }) {
   let fromX: number | undefined;
   let fromY: number | undefined;
@@ -155,7 +225,7 @@ function getLine({
   let toX: number | undefined;
   let toY: number | undefined;
 
-  if (axis === "vertical") {
+  if (axis === ELineAxis.vertical) {
     fromX = left + SIZE * (1 / 2);
     fromY = top;
 
@@ -163,7 +233,7 @@ function getLine({
     toY = top + SIZE;
   }
 
-  if (axis === "horizontal") {
+  if (axis === ELineAxis.horizontal) {
     fromX = left;
     fromY = top + SIZE * (1 / 2);
 
@@ -188,7 +258,7 @@ function getArc({
 }: {
   top: number;
   left: number;
-  corner: string;
+  corner: EArcCorner;
 }) {
   let fromX: number | undefined;
   let fromY: number | undefined;
@@ -219,8 +289,10 @@ function getArc({
   }
 
   // rotation
-  if (corner === "top-right" || corner === "bottom-left") sweepFlag = 0;
-  if (corner === "top-left" || corner === "bottom-right") sweepFlag = 1;
+  if (corner === EArcCorner.topRight || corner === EArcCorner.bottomLeft)
+    sweepFlag = 0;
+  if (corner === EArcCorner.topLeft || corner === EArcCorner.bottomRight)
+    sweepFlag = 1;
 
   // prettier-ignore
   return (
@@ -228,7 +300,7 @@ function getArc({
     `${fromX}, ${fromY} ` +
 
     `A ` +
-    `${RADIUS}, ${RADIUS} ` +
+    `${SIZE / 2}, ${SIZE / 2} ` +
     `0 ` +
     `0 ` +
     `${sweepFlag} ` +
@@ -236,42 +308,42 @@ function getArc({
   );
 }
 
-// const gui = new GUI();
+// =============================================================================
+// configuration interface
+// =============================================================================
 
-// const myObject = {
-//   myBoolean: true,
-//   myFunction: function () {},
-//   myString: "lil-gui",
-//   myNumber: 1,
-// };
+const gui = new GUI();
 
-// gui.add(myObject, "myBoolean"); // Checkbox
-// gui.add(myObject, "myFunction"); // Button
-// gui.add(myObject, "myString"); // Text Field
-// gui.add(myObject, "myNumber"); // Number Field
+const guiConfig: Record<any, any> = {
+  update() {
+    const shapes = Object.entries(guiConfig)
+      .filter(([shapeName, isChecked]) => isShapeName(shapeName) && isChecked)
+      .map(([shapeName]) => SHAPES.find((shape) => shape.name === shapeName))
+      .filter((shape) => shape !== undefined);
 
-// // Add sliders to number fields by passing min and max
-// gui.add(myObject, "myNumber", 0, 1);
-// gui.add(myObject, "myNumber", 0, 100, 2); // snap to even numbers
+    render(shapes);
+  },
+};
 
-// // Create dropdowns by passing an array or object of named values
-// gui.add(myObject, "myNumber", [0, 1, 2]);
-// gui.add(myObject, "myNumber", { Label1: 0, Label2: 1, Label3: 2 });
+Object.values(EShapeName).forEach((shapeName) => {
+  guiConfig[shapeName] = true;
+  gui.add(guiConfig, shapeName).name(shapeName);
+});
 
-// // Chainable methods
-// gui
-//   .add(myObject, "myBoolean")
-//   .name("Custom Name")
-//   .onChange((value: any) => {
-//     console.log(value);
-//   });
+gui.add(guiConfig, "update").name("Update");
 
-// // Create color pickers for multiple color formats
-// const colorFormats = {
-//   string: "#ffffff",
-//   int: 0xffffff,
-//   object: { r: 1, g: 1, b: 1 },
-//   array: [1, 1, 1],
-// };
+// =============================================================================
+// events
+// =============================================================================
 
-// gui.addColor(colorFormats, "string");
+window.addEventListener("load", () => {
+  pathElement.setAttribute("fill", "none");
+  pathElement.setAttribute("stroke-width", "1");
+  pathElement.setAttribute("stroke", "#eee");
+
+  render(SHAPES);
+});
+
+// TODO: resize svg
+// TODO: debounce
+// window.addEventListener("resize", () => {});
