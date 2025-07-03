@@ -149,6 +149,14 @@ const SHAPES: TShape[] = [
 ];
 
 // =============================================================================
+// state
+// =============================================================================
+
+const state = {
+  shapes: SHAPES,
+};
+
+// =============================================================================
 // functions
 // =============================================================================
 
@@ -307,6 +315,18 @@ function getArc({
   );
 }
 
+function debounce<T extends (...args: any[]) => any>(
+  fn: T,
+  delay: number = 200
+): (...args: Parameters<T>) => void {
+  let timeoutId: ReturnType<typeof setTimeout>;
+
+  return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
 // =============================================================================
 // configuration interface
 // =============================================================================
@@ -362,12 +382,12 @@ const guiConfig: Record<any, any> = {
     guiConfig.update();
   },
   update() {
-    const shapes = Object.entries(guiConfig)
+    state.shapes = Object.entries(guiConfig)
       .filter(([shapeName, isChecked]) => isShapeName(shapeName) && isChecked)
       .map(([shapeName]) => SHAPES.find((shape) => shape.name === shapeName))
       .filter((shape) => shape !== undefined);
 
-    render(shapes);
+    render(state.shapes);
   },
 };
 
@@ -398,9 +418,10 @@ window.addEventListener("load", () => {
   pathElement.setAttribute("stroke-width", "1");
   pathElement.setAttribute("stroke", "#eee");
 
-  render(SHAPES);
+  render(state.shapes);
 });
 
-// TODO: resize svg
-// TODO: debounce
-// window.addEventListener("resize", () => {});
+window.addEventListener(
+  "resize",
+  debounce(() => render(state.shapes))
+);
