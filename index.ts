@@ -198,7 +198,7 @@ function render(shapes: TShape[]) {
   const width = window.innerWidth;
   const height = window.innerHeight;
 
-  // TODO: make this configurable
+  // TODO: make size configurable
   const size = 50;
 
   const columns = Math.ceil(width / size);
@@ -387,17 +387,18 @@ function debounce<T extends (...args: any[]) => any>(
 
 const gui = new GUI({ title: "Truchet " });
 
-const guiConfig: Record<any, any> = {
+const guiConfig = {
+  shapes: {} as Record<TShapeName, boolean>,
   quarterCircles() {
     Object.values(EShapeName).forEach((shapeName) => {
       switch (shapeName) {
         case EShapeName.mainDiagonalArc:
         case EShapeName.antiDiagonalArc:
-          guiConfig[shapeName] = true;
+          guiConfig.shapes[shapeName] = true;
           break;
 
         default:
-          guiConfig[shapeName] = false;
+          guiConfig.shapes[shapeName] = false;
           break;
       }
 
@@ -409,11 +410,11 @@ const guiConfig: Record<any, any> = {
       switch (shapeName) {
         case EShapeName.mainDiagonalLine:
         case EShapeName.antiDiagonalLine:
-          guiConfig[shapeName] = true;
+          guiConfig.shapes[shapeName] = true;
           break;
 
         default:
-          guiConfig[shapeName] = false;
+          guiConfig.shapes[shapeName] = false;
           break;
       }
 
@@ -430,11 +431,11 @@ const guiConfig: Record<any, any> = {
         case EShapeName.starNoBottomRight:
         case EShapeName.starNoBottomLeft:
         case EShapeName.starNoTopLeft:
-          guiConfig[shapeName] = true;
+          guiConfig.shapes[shapeName] = true;
           break;
 
         default:
-          guiConfig[shapeName] = false;
+          guiConfig.shapes[shapeName] = false;
           break;
       }
 
@@ -456,11 +457,11 @@ const guiConfig: Record<any, any> = {
         case EShapeName.starNoBottomRight:
         case EShapeName.starNoBottomLeft:
         case EShapeName.starNoTopLeft:
-          guiConfig[shapeName] = true;
+          guiConfig.shapes[shapeName] = true;
           break;
 
         default:
-          guiConfig[shapeName] = false;
+          guiConfig.shapes[shapeName] = false;
           break;
       }
 
@@ -486,11 +487,11 @@ const guiConfig: Record<any, any> = {
         case EShapeName.umbrellaRight:
         case EShapeName.umbrellaBottom:
         case EShapeName.umbrellaLeft:
-          guiConfig[shapeName] = true;
+          guiConfig.shapes[shapeName] = true;
           break;
 
         default:
-          guiConfig[shapeName] = false;
+          guiConfig.shapes[shapeName] = false;
           break;
       }
 
@@ -504,11 +505,11 @@ const guiConfig: Record<any, any> = {
         case EShapeName.starXLine:
         case EShapeName.starYLine:
         case EShapeName.starXYLines:
-          guiConfig[shapeName] = true;
+          guiConfig.shapes[shapeName] = true;
           break;
 
         default:
-          guiConfig[shapeName] = false;
+          guiConfig.shapes[shapeName] = false;
           break;
       }
 
@@ -521,11 +522,11 @@ const guiConfig: Record<any, any> = {
         case EShapeName.xYLines:
         case EShapeName.mainDiagonalLine:
         case EShapeName.antiDiagonalLine:
-          guiConfig[shapeName] = true;
+          guiConfig.shapes[shapeName] = true;
           break;
 
         default:
-          guiConfig[shapeName] = false;
+          guiConfig.shapes[shapeName] = false;
           break;
       }
 
@@ -536,11 +537,11 @@ const guiConfig: Record<any, any> = {
     Object.values(EShapeName).forEach((shapeName) => {
       switch (shapeName) {
         case EShapeName.starNoBottomLeftYLine:
-          guiConfig[shapeName] = true;
+          guiConfig.shapes[shapeName] = true;
           break;
 
         default:
-          guiConfig[shapeName] = false;
+          guiConfig.shapes[shapeName] = false;
           break;
       }
 
@@ -551,11 +552,11 @@ const guiConfig: Record<any, any> = {
     Object.values(EShapeName).forEach((shapeName) => {
       switch (shapeName) {
         case EShapeName.starNoBottomRightYLine:
-          guiConfig[shapeName] = true;
+          guiConfig.shapes[shapeName] = true;
           break;
 
         default:
-          guiConfig[shapeName] = false;
+          guiConfig.shapes[shapeName] = false;
           break;
       }
 
@@ -564,21 +565,21 @@ const guiConfig: Record<any, any> = {
   },
   selectAll() {
     Object.values(EShapeName).forEach((shapeName) => {
-      guiConfig[shapeName] = true;
+      guiConfig.shapes[shapeName] = true;
     });
 
     guiConfig.update();
   },
   selectNone() {
     Object.values(EShapeName).forEach((shapeName) => {
-      guiConfig[shapeName] = false;
+      guiConfig.shapes[shapeName] = false;
     });
 
     guiConfig.update();
   },
   toggleSelection() {
     Object.values(EShapeName).forEach((shapeName) => {
-      guiConfig[shapeName] = !guiConfig[shapeName];
+      guiConfig.shapes[shapeName] = !guiConfig.shapes[shapeName];
     });
 
     guiConfig.update();
@@ -587,15 +588,15 @@ const guiConfig: Record<any, any> = {
     const threshold = Math.random();
 
     Object.values(EShapeName).forEach((shapeName) => {
-      guiConfig[shapeName] = Math.random() >= threshold;
+      guiConfig.shapes[shapeName] = Math.random() >= threshold;
     });
 
     guiConfig.update();
   },
   update() {
-    state.shapes = Object.entries(guiConfig)
+    state.shapes = Object.entries(guiConfig.shapes)
       .filter(([shapeName, isChecked]) => isShapeName(shapeName) && isChecked)
-      .map(([shapeName]) => SHAPES.find((shape) => shape.name === shapeName))
+      .map(([shapeName, _]) => SHAPES.find((shape) => shape.name === shapeName))
       .filter((shape) => shape !== undefined);
 
     render(state.shapes);
@@ -621,9 +622,9 @@ selectionFolder.add(guiConfig, "randomSelection").name("Random Selection");
 
 const shapesFolder = gui.addFolder("Shapes");
 Object.values(EShapeName).forEach((shapeName) => {
-  guiConfig[shapeName] = true;
+  guiConfig.shapes[shapeName] = true;
   shapesFolder
-    .add(guiConfig, shapeName)
+    .add(guiConfig.shapes, shapeName)
     .name(shapeName)
     .listen()
     .onChange(guiConfig.update);
@@ -635,7 +636,9 @@ Object.values(EShapeName).forEach((shapeName) => {
 
 window.addEventListener("load", () => {
   pathElement.setAttribute("fill", "none");
+  // TODO: make width configurable
   pathElement.setAttribute("stroke-width", "1");
+  // TODO: make color configurable
   pathElement.setAttribute("stroke", "#eee");
 
   guiConfig.quarterCircles();
