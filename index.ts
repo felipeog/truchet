@@ -111,6 +111,7 @@ type TShape = { name: TShapeName; commands: TCommand[] };
 // =============================================================================
 
 const svgElement = document.querySelector("svg") as SVGSVGElement;
+const rectElement = document.querySelector("rect") as SVGRectElement;
 const pathElement = svgElement.querySelector("path") as SVGPathElement;
 
 // =============================================================================
@@ -194,12 +195,9 @@ const state = {
 // functions
 // =============================================================================
 
-function render(shapes: TShape[]) {
+function render(shapes: TShape[], size: number) {
   const width = window.innerWidth;
   const height = window.innerHeight;
-
-  // TODO: make size configurable
-  const size = 50;
 
   const columns = Math.ceil(width / size);
   const rows = Math.ceil(height / size);
@@ -389,6 +387,10 @@ const gui = new GUI({ title: "Truchet " });
 
 const guiConfig = {
   shapes: {} as Record<TShapeName, boolean>,
+  foregroundColor: "#eeeeee",
+  backgroundColor: "#111111",
+  strokeWidth: 5,
+  size: 50,
   quarterCircles() {
     Object.values(EShapeName).forEach((shapeName) => {
       switch (shapeName) {
@@ -594,12 +596,13 @@ const guiConfig = {
     guiConfig.update();
   },
   update() {
+    // TDOO: remove state, send `guiConfig.shapes` directly to `render`
     state.shapes = Object.entries(guiConfig.shapes)
       .filter(([shapeName, isChecked]) => isShapeName(shapeName) && isChecked)
       .map(([shapeName, _]) => SHAPES.find((shape) => shape.name === shapeName))
       .filter((shape) => shape !== undefined);
 
-    render(state.shapes);
+    render(state.shapes, guiConfig.size);
   },
 };
 
@@ -613,6 +616,37 @@ presetsFolder.add(guiConfig, "circlesAndLines").name("Circles and lines");
 presetsFolder.add(guiConfig, "straightLines").name("Straight lines");
 presetsFolder.add(guiConfig, "rainLeft").name("Rain left");
 presetsFolder.add(guiConfig, "rainRight").name("Rain right");
+
+const appearanceFolder = gui.addFolder("Appearance");
+appearanceFolder
+  .addColor(guiConfig, "backgroundColor")
+  .name("Background color")
+  .onChange((color: string) => {
+    rectElement.setAttribute("fill", color);
+    document.body.style.backgroundColor = color;
+  });
+appearanceFolder
+  .addColor(guiConfig, "foregroundColor")
+  .name("Foreground color")
+  .onChange((color: string) => {
+    pathElement.setAttribute("stroke", color);
+  });
+appearanceFolder
+  .add(guiConfig, "strokeWidth")
+  .min(0.5)
+  .step(0.5)
+  .name("Stroke width")
+  .onChange((width: number) => {
+    pathElement.setAttribute("stroke-width", String(width));
+  });
+appearanceFolder
+  .add(guiConfig, "size")
+  .min(5)
+  .step(5)
+  .name("Tile size")
+  .onChange((tileSize: number) => {
+    render(state.shapes, tileSize);
+  });
 
 const selectionFolder = gui.addFolder("Selection");
 selectionFolder.add(guiConfig, "selectAll").name("Select All");
@@ -635,16 +669,19 @@ Object.values(EShapeName).forEach((shapeName) => {
 // =============================================================================
 
 window.addEventListener("load", () => {
+  document.body.style.backgroundColor = guiConfig.backgroundColor;
+
+  rectElement.setAttribute("fill", guiConfig.backgroundColor);
+
+  pathElement.setAttribute("stroke-width", String(guiConfig.strokeWidth));
+  pathElement.setAttribute("stroke", guiConfig.foregroundColor);
   pathElement.setAttribute("fill", "none");
-  // TODO: make width configurable
-  pathElement.setAttribute("stroke-width", "1");
-  // TODO: make color configurable
-  pathElement.setAttribute("stroke", "#eee");
+  pathElement.setAttribute("stroke-linecap", "round");
 
   guiConfig.quarterCircles();
 });
 
 window.addEventListener(
   "resize",
-  debounce(() => render(state.shapes))
+  debounce(() => render(state.shapes, guiConfig.size))
 );
