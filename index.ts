@@ -611,6 +611,21 @@ const guiConfig = {
   update() {
     render(guiConfig.shapes, guiConfig.tileSize);
   },
+  downloadAsSvg() {
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svgElement);
+    const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+    const link = document.createElement("a");
+
+    link.href = URL.createObjectURL(blob);
+    link.download = "truchet.svg";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(link.href);
+  },
 };
 
 const presetsFolder = gui.addFolder("Presets");
@@ -661,6 +676,9 @@ selectionFolder.add(guiConfig, "selectAll").name("Select All");
 selectionFolder.add(guiConfig, "selectNone").name("Select None");
 selectionFolder.add(guiConfig, "toggleSelection").name("Toggle Selection");
 selectionFolder.add(guiConfig, "randomSelection").name("Random Selection");
+
+const exportFolder = gui.addFolder("Export");
+exportFolder.add(guiConfig, "downloadAsSvg").name("Download as SVG");
 
 const shapesFolder = gui.addFolder("Shapes");
 Object.values(EShapeName).forEach((shapeName) => {
