@@ -384,10 +384,26 @@ const gui = new GUI({ title: "Truchet " });
 
 const guiConfig = {
   shapes: {} as Record<TShapeName, boolean>,
-  foregroundColor: "#eeeeee",
-  backgroundColor: "#111111",
-  strokeWidth: 5,
+  foregroundColor: "#66666b",
+  backgroundColor: "#111116",
+  strokeWidth: 3,
   tileSize: 50,
+  reverseColors() {
+    // prettier-ignore
+    [
+      guiConfig.foregroundColor, 
+      guiConfig.backgroundColor
+    ] = [
+      guiConfig.backgroundColor, 
+      guiConfig.foregroundColor
+    ];
+
+    document.body.style.backgroundColor = guiConfig.backgroundColor;
+
+    rectElement.setAttribute("fill", guiConfig.backgroundColor);
+
+    pathElement.setAttribute("stroke", guiConfig.foregroundColor);
+  },
   quarterCircles() {
     Object.values(EShapeName).forEach((shapeName) => {
       switch (shapeName) {
@@ -622,6 +638,7 @@ appearanceFolder
   .onChange((color: string) => {
     pathElement.setAttribute("stroke", color);
   });
+appearanceFolder.add(guiConfig, "reverseColors").name("Reverse colors");
 appearanceFolder
   .add(guiConfig, "strokeWidth")
   .min(0.5)
