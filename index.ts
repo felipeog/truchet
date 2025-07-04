@@ -184,23 +184,19 @@ const SHAPES: TShape[] = [
 ];
 
 // =============================================================================
-// state
-// =============================================================================
-
-const state = {
-  shapes: Array.from(SHAPES),
-};
-
-// =============================================================================
 // functions
 // =============================================================================
 
-function render(shapes: TShape[], size: number) {
+function render(shapesMap: Record<TShapeName, boolean>, tileSize: number) {
+  const shapes = Object.entries(shapesMap)
+    .filter(([shapeName, isChecked]) => isShapeName(shapeName) && isChecked)
+    .map(([shapeName, _]) => SHAPES.find((shape) => shape.name === shapeName));
+
   const width = window.innerWidth;
   const height = window.innerHeight;
 
-  const columns = Math.ceil(width / size);
-  const rows = Math.ceil(height / size);
+  const columns = Math.ceil(width / tileSize);
+  const rows = Math.ceil(height / tileSize);
 
   svgElement.setAttribute("viewBox", `0 0 ${width} ${height}`);
   svgElement.setAttribute("width", `${width}`);
@@ -210,15 +206,14 @@ function render(shapes: TShape[], size: number) {
 
   for (let column = 0; column < columns; column++) {
     for (let row = 0; row < rows; row++) {
-      const top = row * size;
-      const left = column * size;
+      const top = row * tileSize;
+      const left = column * tileSize;
 
       const shape = getRandom(shapes);
-
       if (!shape) continue;
 
       shape.commands.forEach((command) => {
-        d += getShape({ top, left, size, command });
+        d += getShape({ top, left, tileSize, command });
       });
     }
   }
@@ -233,27 +228,27 @@ function getRandom<T>(array: T[]) {
 function getShape({
   top,
   left,
-  size,
+  tileSize,
   command,
 }: {
   top: number;
   left: number;
-  size: number;
+  tileSize: number;
   command: TArcCommand | TLineCommand;
 }) {
-  if (isArcCommand(command)) return getArc({ top, left, size, command });
-  if (isLineCommand(command)) return getLine({ top, left, size, command });
+  if (isArcCommand(command)) return getArc({ top, left, tileSize, command });
+  if (isLineCommand(command)) return getLine({ top, left, tileSize, command });
 }
 
 function getLine({
   top,
   left,
-  size,
+  tileSize,
   command,
 }: {
   top: number;
   left: number;
-  size: number;
+  tileSize: number;
   command: ELineCommand;
 }) {
   let fromX: number | undefined;
@@ -264,38 +259,38 @@ function getLine({
 
   // from
   if (command.includes("top")) {
-    fromX = left + size * (1 / 2);
+    fromX = left + tileSize * (1 / 2);
     fromY = top;
   }
   if (command.includes("bottom")) {
-    fromX = left + size * (1 / 2);
-    fromY = top + size;
+    fromX = left + tileSize * (1 / 2);
+    fromY = top + tileSize;
   }
 
   // to
   if (command.includes("right")) {
-    toX = left + size;
-    toY = top + size * (1 / 2);
+    toX = left + tileSize;
+    toY = top + tileSize * (1 / 2);
   }
   if (command.includes("left")) {
     toX = left;
-    toY = top + size * (1 / 2);
+    toY = top + tileSize * (1 / 2);
   }
 
   if (command === ELineCommand.vertical) {
-    fromX = left + size * (1 / 2);
+    fromX = left + tileSize * (1 / 2);
     fromY = top;
 
-    toX = left + size * (1 / 2);
-    toY = top + size;
+    toX = left + tileSize * (1 / 2);
+    toY = top + tileSize;
   }
 
   if (command === ELineCommand.horizontal) {
     fromX = left;
-    fromY = top + size * (1 / 2);
+    fromY = top + tileSize * (1 / 2);
 
-    toX = left + size;
-    toY = top + +size * (1 / 2);
+    toX = left + tileSize;
+    toY = top + tileSize * (1 / 2);
   }
 
   // prettier-ignore
@@ -311,14 +306,16 @@ function getLine({
 function getArc({
   top,
   left,
-  size,
+  tileSize,
   command,
 }: {
   top: number;
   left: number;
-  size: number;
+  tileSize: number;
   command: EArcCommand;
 }) {
+  const radius = tileSize / 2;
+
   let fromX: number | undefined;
   let fromY: number | undefined;
 
@@ -329,22 +326,22 @@ function getArc({
 
   // from
   if (command.includes("top")) {
-    fromX = left + size * (1 / 2);
+    fromX = left + tileSize * (1 / 2);
     fromY = top;
   }
   if (command.includes("bottom")) {
-    fromX = left + size * (1 / 2);
-    fromY = top + size;
+    fromX = left + tileSize * (1 / 2);
+    fromY = top + tileSize;
   }
 
   // to
   if (command.includes("right")) {
-    toX = left + size;
-    toY = top + size * (1 / 2);
+    toX = left + tileSize;
+    toY = top + tileSize * (1 / 2);
   }
   if (command.includes("left")) {
     toX = left;
-    toY = top + size * (1 / 2);
+    toY = top + tileSize * (1 / 2);
   }
 
   // rotation
@@ -359,7 +356,7 @@ function getArc({
     `${fromX}, ${fromY} ` +
 
     `A ` +
-    `${size / 2}, ${size / 2} ` +
+    `${radius}, ${radius} ` +
     `0 ` +
     `0 ` +
     `${sweepFlag} ` +
@@ -390,7 +387,7 @@ const guiConfig = {
   foregroundColor: "#eeeeee",
   backgroundColor: "#111111",
   strokeWidth: 5,
-  size: 50,
+  tileSize: 50,
   quarterCircles() {
     Object.values(EShapeName).forEach((shapeName) => {
       switch (shapeName) {
@@ -596,13 +593,7 @@ const guiConfig = {
     guiConfig.update();
   },
   update() {
-    // TDOO: remove state, send `guiConfig.shapes` directly to `render`
-    state.shapes = Object.entries(guiConfig.shapes)
-      .filter(([shapeName, isChecked]) => isShapeName(shapeName) && isChecked)
-      .map(([shapeName, _]) => SHAPES.find((shape) => shape.name === shapeName))
-      .filter((shape) => shape !== undefined);
-
-    render(state.shapes, guiConfig.size);
+    render(guiConfig.shapes, guiConfig.tileSize);
   },
 };
 
@@ -640,12 +631,12 @@ appearanceFolder
     pathElement.setAttribute("stroke-width", String(width));
   });
 appearanceFolder
-  .add(guiConfig, "size")
+  .add(guiConfig, "tileSize")
   .min(5)
   .step(5)
   .name("Tile size")
   .onChange((tileSize: number) => {
-    render(state.shapes, tileSize);
+    render(guiConfig.shapes, tileSize);
   });
 
 const selectionFolder = gui.addFolder("Selection");
@@ -683,5 +674,5 @@ window.addEventListener("load", () => {
 
 window.addEventListener(
   "resize",
-  debounce(() => render(state.shapes, guiConfig.size))
+  debounce(() => render(guiConfig.shapes, guiConfig.tileSize))
 );
